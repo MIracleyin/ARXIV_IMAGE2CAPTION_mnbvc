@@ -16,9 +16,11 @@ import logging
 import sys
 from mmdata import metadata_assemble
 
-global_log_file = "./log_file.jsonl"  # 失败日志
+global_log_file = "./logs/log_file.log"  # 失败日志
 
-spectial_file_log = "./spectial_file_log.jsonl"  # 特殊矢量图文件日志
+spectial_file_log = "./logs/spectial_file_log.log"  # 特殊矢量图文件日志
+
+os.makedirs(os.path.dirname(global_log_file), exist_ok=True)
 
 
 Path(global_log_file).touch()  # 创建全局日志文件
@@ -477,21 +479,18 @@ def process_list_of_arxiv_files(files, entity_ids):
             #     "../data/tex_source_parquet/" + str(entity_id) + ".xlsx", index=False
             # )
             pd.DataFrame([block.to_pydict() for block in file_parquet]).to_parquet(
-                "../data/tex_source_parquet/" + str(entity_id) + ".parquet", index=False
+                "./data/tex_source_parquet/" + str(entity_id) + ".parquet", index=False
             )
 
 
-def main():
-    # meta_datas = process_a_compressed_file(
-    #     "../data/tex_source/0704.1703/arXiv-0704.1703v1.tar.gz",
-    #     "arXiv-0704.1703v1",
-    # )
-    # pd.DataFrame([block.to_pydict() for block in meta_datas]).to_excel(
-    #     "test.xlsx", index=False
-    # )
-    arxiv_list = find_multi_extensions(
-        "../data/", ["*.gz", ".tar"]
-    )
+def main(file_list):
+    # arxiv_list = find_multi_extensions(
+    #     "../data/", ["*.gz", ".tar"]
+    # ) # 读取文件里列表
+
+    with open(file_list, 'r') as f:
+        arxiv_list = f.readlines()
+
     entity_ids = [os.path.basename(i) for i in arxiv_list]
 
     count = 10
@@ -504,4 +503,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main('./list.txt')
