@@ -7,7 +7,7 @@ import json
 from functools import wraps
 import threading
 from copy import deepcopy
-
+import multiprocessing 
 
 def lock_wraps(func):
     """
@@ -20,7 +20,7 @@ def lock_wraps(func):
         被线程锁包装后的函数。
 
     """
-    lock = threading.Lock()
+    lock = multiprocessing.Lock()
 
     @wraps(func)
     def wrapper(*args, **kwargs):

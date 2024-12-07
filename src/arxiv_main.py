@@ -576,6 +576,8 @@ def main():
             executor.map(process_a_compressed_file, [[file_path, args] for file_path in input_file_path_list])
     else:
         process_a_compressed_file([input_file, args])
+    
+    
 
 
 if __name__ == "__main__":
