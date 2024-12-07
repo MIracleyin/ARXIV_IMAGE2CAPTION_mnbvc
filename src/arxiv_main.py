@@ -15,16 +15,24 @@ from pathlib import Path
 import logging
 import sys
 from mmdata import metadata_assemble
+import argparse
+from datetime import datetime
+from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Manager
+from ctypes import c_char_p
 
-global_log_file = "./logs/log_file.log"  # 失败日志
+# global_log_file = "./logs/log_file.log"  # 失败日志
+# global_log_file_v = None  # 失败日志
 
-spectial_file_log = "./logs/spectial_file_log.log"  # 特殊矢量图文件日志
+# spectial_file_log_v = None  # 特殊矢量图文件日志
+# output_dir_v =None
+# spectial_file_log = "./logs/spectial_file_log.log"  # 特殊矢量图文件日志
 
-os.makedirs(os.path.dirname(global_log_file), exist_ok=True)
 
 
-Path(global_log_file).touch()  # 创建全局日志文件
-Path(spectial_file_log).touch()  # 创建特殊矢量图文件日志
+
+# Path(global_log_file).touch()  # 创建全局日志文件
+# Path(spectial_file_log).touch()  # 创建特殊矢量图文件日志
 
 
 def extract_gz_file(file_path, to_path=None):
@@ -273,9 +281,20 @@ def obtain_compressed_dir(path):
         return path[:-3]
 
 
-def process_a_compressed_file(file_path, entity_id):
+def process_a_compressed_file(paramters):
+    file_path, args = paramters
+    # print(paramters)
+    # global global_log_file, spectial_file_log, output_dir
 
+    global_log_file = os.path.join(args.log_dir , 'log_file.log')
+    spectial_file_log = os.path.join(args.log_dir, "spectial_file_log.log")
+    output_dir = args.output_dir
+
+
+
+    print(global_log_file, 'global_log_file')
     # 验证文件扩展名是否有效
+    entity_id = os.path.basename(file_path)
     assert validate_file_extension(file_path), "Invalid file extension: " + str(
         file_path
     )
@@ -464,26 +483,44 @@ def process_a_compressed_file(file_path, entity_id):
             # 图形计数加一
             total_figure_counts += 1
     # 返回总元数据
+    if len(total_meatadata):
+        save_path =  f"{output_dir}/" + str(entity_id) + ".parquet"
+
+        # print('saveing ...', save_path)
+        try:
+            pd.DataFrame([block.to_pydict() for block in total_meatadata]).to_parquet(
+                    save_path, index=False
+                )
+        except Exception as e:
+            save_jsonl(
+                        {
+                            "reason": "save image pair failed",
+                            "save_path": save_path,
+                            "exception": str(e),
+                        },
+                        global_log_file,
+                    )
+        
     return total_meatadata
 
 
-def process_list_of_arxiv_files(files, entity_ids):
+def process_list_of_arxiv_files(files):
 
-    for each_file, entity_id in zip(files, entity_ids):
-        print("Debug:", each_file, entity_id)
-        file_parquet = process_a_compressed_file(each_file, entity_id)
+    for each_file in files:
+        print("Debug:", each_file)
+        file_parquet = process_a_compressed_file(each_file)
         # pd.DataFrame([block.to_pydict() for block in file_parquet]).to_parquet('../data/tex_source_parquet/'+str(entity_id)+'.parquet')
 
-        if len(file_parquet):
-            # pd.DataFrame([block.to_pydict() for block in file_parquet]).to_excel(
-            #     "../data/tex_source_parquet/" + str(entity_id) + ".xlsx", index=False
-            # )
-            pd.DataFrame([block.to_pydict() for block in file_parquet]).to_parquet(
-                "./data/tex_source_parquet/" + str(entity_id) + ".parquet", index=False
-            )
+        # if len(file_parquet):
+        #     # pd.DataFrame([block.to_pydict() for block in file_parquet]).to_excel(
+        #     #     "../data/tex_source_parquet/" + str(entity_id) + ".xlsx", index=False
+        #     # )
+        #     pd.DataFrame([block.to_pydict() for block in file_parquet]).to_parquet(
+        #         "./data/tex_source_parquet/" + str(entity_id) + ".parquet", index=False
+        #     )
 
 
-def main(file_list):
+def test(file_list):
     # arxiv_list = find_multi_extensions(
     #     "../data/", ["*.gz", ".tar"]
     # ) # 读取文件里列表
@@ -491,16 +528,55 @@ def main(file_list):
     with open(file_list, 'r') as f:
         arxiv_list = f.readlines()
 
-    entity_ids = [os.path.basename(i) for i in arxiv_list]
+    # entity_ids = [os.path.basename(i) for i in arxiv_list]
 
     count = 10
     # for file_path, entity_id in zip(arxiv_list, entity_id):
     #     count += 1
     #     print("Debug:", file_path, entity_id)
-    process_list_of_arxiv_files(arxiv_list, entity_ids)
+    process_list_of_arxiv_files(arxiv_list)
     # if count > 10:
     #     break
 
+def main():
+    parser = argparse.ArgumentParser(description="Docling Convert")
+    parser.add_argument("--input_file", "-i", type=str,default='list.txt', help="Input file")
+    parser.add_argument("--workers_num", "-w", type=int,default=2, help="multi process workers num")
+    parser.add_argument("--output_dir", "-o", type=str,default=r'data/tex_source_parquet', help="Output directory")
+    parser.add_argument("--log_dir", "-l", type=str, default="logs", help="Log path")
+    args = parser.parse_args()
+    
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    
+    input_file = args.input_file
+    workers_num = args.workers_num
+    # log_dir = Path(args.log_dir)
+
+    
+    # global global_log_file, spectial_file_log, output_dir # 失败日志
+
+    global_log_file = os.path.join(args.log_dir , 'log_file.log')
+    spectial_file_log = os.path.join(args.log_dir, "spectial_file_log.log")
+    output_dir = args.output_dir
+
+
+
+    Path(global_log_file).touch()  # 创建全局日志文件
+    Path(spectial_file_log).touch()  # 创建特殊矢量图文件日志
+    os.makedirs(output_dir, exist_ok=True)
+
+    
+    # txt 文件为在数据路径下生成的 list 文件
+    # ex: find . -name "*.pdf" > list.txt
+    if input_file.endswith(".txt"): 
+        input_file_list = Path(input_file).read_text().splitlines()
+        input_file_path_list = [os.path.join(os.path.dirname(input_file), file_path) for file_path in input_file_list]
+        print(input_file_path_list)
+        with ProcessPoolExecutor(max_workers=workers_num) as executor:
+            executor.map(process_a_compressed_file, [[file_path, args] for file_path in input_file_path_list])
+    else:
+        process_a_compressed_file([input_file, args])
+
 
 if __name__ == "__main__":
-    main('./list.txt')
+    main()

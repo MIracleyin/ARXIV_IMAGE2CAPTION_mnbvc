@@ -1,0 +1,24 @@
+\begin{table}[t]
+    \centering
+    \caption{Ablation study of the parameters $\lambda$ and $\tau$ on the CIFAR-MNIST dataset with $N=2$ participants over three independent runs. The first column ($\tau=0.0$) corresponds to the FedAvg algorithm. The last row $(-)$ presents results for the \texttt{FedPeWS-Fixed} algorithm.} 
+    \resizebox{\linewidth}{!}{ 
+    \begin{tabular}{r|cccccc}
+        \toprule
+        & \multicolumn{6}{c}{\cellcolor{lightblue}\textbf{Proportion of warmup rounds $\tau = W/T$}} \\ \cmidrule{2-7} 
+        $\mathbf{\lambda} (\downarrow) , \tau (\rightarrow)$ & $\tau=0.0$ (FedAvg) & $\tau=0.2$ & $\tau=0.4$ & $\tau=0.5$ & $\tau=0.6$ & $\tau=0.8$ \\ \midrule 
+        0.0 & \multirow{12}{*}{$71.23 \pm 0.71$} & $68.01 \pm 0.88$ & $66.01\pm0.48$ & $65.96\pm1.03$ & $65.40\pm1.95$ & $65.77\pm0.41$ \\ \cmidrule{3-7}
+        0.1 & & $68.77\pm1.09$ & $70.39\pm1.00$ & $70.61\pm1.17$ & $69.48\pm0.37$ & $70.36\pm2.06$ \\
+        0.3 & & $70.86\pm0.23$ & $73.00\pm0.65$ & $73.91\pm0.71$ & $73.26\pm0.46$ & $73.02\pm1.05$ \\
+        0.5 & & $71.43\pm0.56$ & $74.17\pm0.91$ & $73.84\pm0.12$ & $73.66\pm0.88$ & $75.05\pm0.45$ \\
+        1.0 & & $72.26\pm0.54$ & $74.46\pm0.44$ & $74.54\pm0.76$ & $74.91\pm0.42$ & $73.81\pm0.87$ \\
+        2.0 & & $72.61\pm0.79$ & $73.68\pm0.17$ & \cellcolor{lightgreen} $\mathbf{75.35\pm0.50}$ & $74.76\pm0.54$ & $74.46\pm0.56$ \\
+        5.0 & & $72.60\pm0.45$ & \cellcolor{lightgreen} $\mathbf{75.22\pm0.33}$ & \cellcolor{lightgreen} $\mathbf{75.00\pm0.74}$ & $75.01\pm0.71$ & $73.96\pm1.60$ \\
+        10.0 & & $72.29\pm0.48$ & \cellcolor{lightgreen} $\mathbf{74.97\pm0.65}$ & $74.31\pm0.95$ & $74.03\pm0.30$ & $71.91\pm2.69$ \\
+        100.0 & & $71.64\pm0.47$ & $72.92\pm0.39$ & $73.96\pm0.65$ & $73.13\pm0.73$ & $72.43\pm3.55$ \\
+        1000.0 & & $71.58\pm0.53$ & $73.18\pm0.73$ & $73.32\pm1.70$ & $73.87\pm1.16$ & $72.52\pm1.92$ \\ \cmidrule{3-7} 
+        $-$ & & $72.72\pm0.44$ & \cellcolor{lightgreen} $\mathbf{75.22\pm0.19}$ & \cellcolor{lightgreen} $\mathbf{75.05\pm0.42}$ & $72.51\pm3.89$ & $73.77\pm0.20$ \\ 
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab: cifar-mnist-ablation}
+\end{table}

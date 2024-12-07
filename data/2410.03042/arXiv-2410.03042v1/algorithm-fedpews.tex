@@ -1,0 +1,30 @@
+\begin{algorithm}[t]
+    \caption{\texttt{FedPeWS} (For \texttt{FedPeWS-Fixed} variant, the steps highlighted in green are omitted and instead the server sets $m_i^{t} = m_i$, $\forall~t \in [W]$.)} 
+    \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+    \renewcommand{\algorithmicensure}{\textbf{Return}} 
+    \begin{algorithmic}[1] 
+        \Require {Number of collaboration rounds $T$}, number of warmup rounds $W$, number of local steps $K$, local learning rate $\eta_{\ell}$, global learning rate $\eta_g$, mask learning rate $\eta_s$, $\lambda$ (mask diversity weight) 
+        \State Initialize $x_g^0$ \colorbox{lightgreen}{and $s_g^0$, compute $\theta_g^0 = \sigma(s_g^0)$} 
+        \For{$t = 1, \ldots, T$} 
+            \If{$t > W$} // Use all parameters after warmup 
+                \State Set $m_i^t = \mathbf{1}$, i.e., $m_i(\ell) = 1, ~ \forall ~ \ell \in [d]$ 
+            \EndIf 
+            \State Server sends global model $x_g^{t-1}$ \colorbox{lightgreen}{and global mask probability $\theta_g^{t-1}$} to all clients $i \in [N]$ 
+            \For{client $i \in [N]$ in parallel}
+                \State Initialize local model $x_{i}^{t,0} \gets x_g^{t-1}$  
+                \State \colorbox{lightgreen}{$s_i^{t,0} \gets s_g^0$ \textbf{if } $t=1$ \textbf{else } $s_i^{t,0} \gets s_i^{t-1,K}$ \textbf{endif}} 
+                \For{$k = 1, \ldots, K$} 
+                    \State \colorbox{lightgreen}{\textbf{Procedure I}: Freeze model weights $x_{i}^{t,k-1}$}
+                    \State \colorbox{lightgreen}{Optimize over $s$: $\mathcal{L}_s = f_i\Big(x_i^{t,k-1} \odot \mathcal{G}\left(s_i^{t,k-1}\right), \xi_i^{t,k-1}\Big) - \lambda \|\sigma\left(s_{i}^{t,k-1}\right) - {\theta_{g \backslash \{i\}}^{t-1}}\|_2^2$} 
+                    \State \colorbox{lightgreen}{Update: $s_{i}^{t,k} \gets s_{i}^{t,k-1} - \eta_s \nabla_{s} \mathcal{L}_s$}
+                    \State \textbf{Procedure II.} Freeze mask score vector $s_{i}^{t,k}$ 
+                    \State Optimize over $x:$ $\mathcal{L}_x = f_i\Big(x_i^{t,k-1} \odot \text{\colorbox{lightgreen}{$\mathcal{G}\left(s_i^{t,k}\right)$}}, \xi_i^{t,k-1}\Big)$ 
+                    \State Update: $x_{i}^{t,k} \gets x_{i}^{t,k-1} - \eta_{\ell} \nabla_{x} \mathcal{L}_x$ 
+                \EndFor
+                \State \colorbox{lightgreen}{Compute $m_i^{t} = \mathcal{G}(s_i^{t,K})$ and} upload $x_{i}^{t} \gets x_{i}^{t,K}$, \colorbox{lightgreen}{$m_i^{t}$} to server  
+            \EndFor
+            \State $x_g^{t} = x_g^{t-1} -  \eta_g \left(x_g^{t-1} - \dfrac{\sum_{i \in [N]}x_{i}^{t} \odot m_i^{t}}{\sum_{i \in [N]}m_i^{t}}\right)$ 
+        \EndFor
+    \end{algorithmic}
+    \label{algorithm: adaptivesubnet}
+\end{algorithm} 

@@ -1,0 +1,24 @@
+\begin{table}[t]
+    \centering
+    \caption{The required number of collaboration rounds to reach target accuracy $\upsilon$ $\%$ using FedProx algorithm and the final accuracy after $T$ rounds. The results are averaged over 3 seeds. 
+    {\color{red} $\times$} indicates that the algorithm cannot reach target accuracy $\upsilon$ within $T$ rounds.} 
+    \resizebox{\linewidth}{!}{ 
+        \begin{tabular}{cr|ccccc} 
+        \toprule
+        \rowcolor{lightblue} \multicolumn{2}{r}{\textbf{Dataset $/$ Batch size}} & \multicolumn{3}{c}{Synthetic-32K, $32$} & \multicolumn{1}{c}{Synthetic-3.2K, $8$} 
+        \\ \midrule 
+        \rowcolor{lightblue} \multicolumn{2}{r}{\textbf{Parameters} $\{\eta_g / \lambda / \tau\}$} & $\{1.0 / 0.1 / 0.125\}$ & $\{0.5/0.1/0.2\}$ & $\{0.25/1.0/0.1875\}$ & \multicolumn{1}{c}{$\{0.1/1.0/0.1\}$} \\ \midrule
+        \rowcolor{lightblue} \multicolumn{2}{r}{\textbf{Target accuracy $\upsilon (\%)$}} & $99$ & $90$ & $75$ & $99$ 
+        \\ \midrule 
+        \multirow{2}{*}{\parbox{3.5cm}{\centering \textbf{No. of rounds to \\ reach target accuracy}}} & FedProx & $138\pm13.22$ & \cellcolor{lightred} \color{red} $\times$ & \cellcolor{lightred} \color{red} $\times$ & $362\pm20.00$ 
+        \\ \cmidrule{2-6} 
+         & \texttt{FedPeWS} & \cellcolor{lightgreen} $\mathbf{115\pm5.29}$ & \cellcolor{lightgreen} $\mathbf{211\pm16.52}$ & \cellcolor{lightgreen} $\mathbf{314\pm27.83}$ & \cellcolor{lightgreen} $\mathbf{344\pm27.30}$ 
+        \\ \midrule 
+        \multirow{2}{*}{\parbox{3.75cm}{\centering \textbf{Final accuracy after \\ $T$ collaboration rounds}}} & FedProx & \multicolumn{1}{c}{$99.95\pm0.02$} & $82.43\pm7.98$ & $69.26\pm6.03$ &\cellcolor{lightgreen}  $\mathbf{99.92\pm0.06}$ 
+        \\ \cmidrule{2-6}
+        & \texttt{FedPeWS} & \multicolumn{1}{c}{\cellcolor{lightgreen} $\mathbf{99.96\pm0.01}$} & \cellcolor{lightgreen} $\mathbf{98.40\pm1.84}$ & \cellcolor{lightgreen} $\mathbf{90.40\pm3.91}$ & \cellcolor{lightgreen} $\mathbf{99.92\pm0.07}$ 
+        \\ \bottomrule 
+        \end{tabular}
+    }
+    \label{table: convergence-table-fedprox}
+\end{table}

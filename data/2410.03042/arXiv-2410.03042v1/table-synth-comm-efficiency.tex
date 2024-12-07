@@ -1,0 +1,24 @@
+\begin{table}[t]
+    \centering
+    \caption{The required number of collaboration rounds to reach target accuracy $\upsilon$ $\%$ and the final accuracy after $T$ rounds. The results are averaged over 3 seeds. 
+    {\color{red} $\times$} indicates that the algorithm cannot reach target accuracy $\upsilon$ within $T$ rounds and {\color{red} NA} means that it reaches $\upsilon$ only in one random seed. } 
+    \resizebox{\linewidth}{!}{ 
+        \begin{tabular}{cr|ccccc} 
+        \toprule
+        \rowcolor{lightblue} \multicolumn{2}{r}{\textbf{Dataset $/$ Batch size}} & \multicolumn{3}{c}{Synthetic-32K, $32$} & \multicolumn{1}{c}{Synthetic-3.2K, $8$} 
+        \\ \midrule 
+        \rowcolor{lightblue} \multicolumn{2}{r}{\textbf{Parameters} $\{\eta_g / \lambda / \tau\}$} & $\{1.0 / 5.0 / 0.125\}$ & $\{0.5/2.0/0.2\}$ & $\{0.25/1.0/0.1875\}$ & \multicolumn{1}{c}{$\{0.1/2.0/0.1\}$} \\ \midrule
+        \rowcolor{lightblue} \multicolumn{2}{r}{\textbf{Target accuracy $\upsilon (\%)$}} & $99$ & $90$ & $75$ & $99$ 
+        \\ \midrule 
+        \multirow{2}{*}{\parbox{3.5cm}{\centering \textbf{No. of rounds to \\ reach target accuracy}}} & FedAvg & $148\pm3.79$ & \color{red} \cellcolor{lightred} $199\pm \text{NA}$ & \color{red} \cellcolor{lightred} $\times$ & \color{red} \cellcolor{lightred} $371\pm\text{NA}$ 
+        \\ \cmidrule{2-6}
+         & \texttt{FedPeWS} & \cellcolor{lightgreen} $\mathbf{115\pm7.21}$ & \cellcolor{lightgreen} $\mathbf{182\pm6.81}$ & \cellcolor{lightgreen} $\mathbf{286\pm7.93}$ & \cellcolor{lightgreen} $\mathbf{301\pm10.59}$ 
+        \\ \midrule 
+        \multirow{2}{*}{\parbox{3.75cm}{\centering \textbf{Final accuracy after \\ $T$ collaboration rounds}}} & FedAvg & \multicolumn{1}{c}{$99.94\pm0.05$} & $91.40\pm7.25$ & $67.64\pm0.90$ & $97.33\pm3.89$ 
+        \\ \cmidrule{2-6}
+        & \texttt{FedPeWS} & \multicolumn{1}{c}{\cellcolor{lightgreen} $\mathbf{99.96\pm0.01}$} & \cellcolor{lightgreen} $\mathbf{99.49\pm0.60}$ & \cellcolor{lightgreen} $\mathbf{83.50\pm3.52}$ & \cellcolor{lightgreen} $\mathbf{99.66\pm0.19}$ 
+        \\ \bottomrule 
+        \end{tabular}
+    }
+    \label{table: convergence-table}
+\end{table}
