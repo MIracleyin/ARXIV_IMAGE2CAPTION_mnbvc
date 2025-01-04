@@ -1,0 +1,3 @@
+./data_output/data-table-parquet/arXiv-0704.0388v2.tar.gz.parquet
+./data_output/data-table-parquet/arXiv-2410.01461v1.tar.gz.parquet
+./data_output/data-table-parquet/arXiv-2410.03042v1.tar.gz.parquet

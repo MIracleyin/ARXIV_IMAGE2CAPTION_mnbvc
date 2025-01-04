@@ -62,7 +62,14 @@ def write_file(file_path, data):
         file.write(data)
 
 
-def metadata_assemble(entity_id, block_id, text=None, image_path=None):
+def metadata_assemble(
+    entity_id,
+    block_id,
+    text=None,
+    image_path=None,
+    image_data=None,
+    image_data_meta=None,
+):
     """
     将实体ID、块ID、文本和图像路径等信息组装成元数据块。
 
@@ -79,15 +86,23 @@ def metadata_assemble(entity_id, block_id, text=None, image_path=None):
         AssertionError: 如果未提供文本或图像路径，则抛出断言错误。
 
     """
-    assert text or image_path, "text or image_path is required"
+    assert (
+        text or image_path or (image_data and image_data_meta)
+    ), "text or image_path is required"
 
     timestamp = datetime.now()
     formatted_time = timestamp.strftime("%Y%m%d")
     block_type = "图片" if image_path else "文本"
 
-    if image_path:
-        image = read_file(image_path)
-        meta_dict = {"file_name": os.path.basename(image_path)}
+    if image_path or (image_data and image_data_meta):
+        if image_path:
+            image = read_file(image_path)
+            meta_dict = {"file_name": os.path.basename(image_path)}
+            if image_data_meta:
+                meta_dict.update(image_data_meta)
+        else:
+            image = image_data
+            meta_dict = image_data_meta
     else:
         image = None
         meta_dict = {"文本长度": len(text)}

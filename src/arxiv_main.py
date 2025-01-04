@@ -29,8 +29,6 @@ from ctypes import c_char_p
 # spectial_file_log = "./logs/spectial_file_log.log"  # 特殊矢量图文件日志
 
 
-
-
 # Path(global_log_file).touch()  # 创建全局日志文件
 # Path(spectial_file_log).touch()  # 创建特殊矢量图文件日志
 
@@ -134,6 +132,9 @@ def extract_images_code(text_code):
         figures.extend(regex.findall(pattern_regex, text_code))
 
     return figures
+
+
+
 
 
 def extract_tex_codeAndfiguresTex(tex_path):
@@ -286,13 +287,11 @@ def process_a_compressed_file(paramters):
     # print(paramters)
     # global global_log_file, spectial_file_log, output_dir
 
-    global_log_file = os.path.join(args.log_dir , 'log_file.log')
+    global_log_file = os.path.join(args.log_dir, "log_file.log")
     spectial_file_log = os.path.join(args.log_dir, "spectial_file_log.log")
     output_dir = args.output_dir
 
-
-
-    print(global_log_file, 'global_log_file')
+    print(global_log_file, "global_log_file")
     # 验证文件扩展名是否有效
     entity_id = os.path.basename(file_path)
     assert validate_file_extension(file_path), "Invalid file extension: " + str(
@@ -484,23 +483,23 @@ def process_a_compressed_file(paramters):
             total_figure_counts += 1
     # 返回总元数据
     if len(total_meatadata):
-        save_path =  f"{output_dir}/" + str(entity_id) + ".parquet"
+        save_path = f"{output_dir}/" + str(entity_id) + ".parquet"
 
         # print('saveing ...', save_path)
         try:
             pd.DataFrame([block.to_pydict() for block in total_meatadata]).to_parquet(
-                    save_path, index=False
-                )
+                save_path, index=False
+            )
         except Exception as e:
             save_jsonl(
-                        {
-                            "reason": "save image pair failed",
-                            "save_path": save_path,
-                            "exception": str(e),
-                        },
-                        global_log_file,
-                    )
-        
+                {
+                    "reason": "save image pair failed",
+                    "save_path": save_path,
+                    "exception": str(e),
+                },
+                global_log_file,
+            )
+
     return total_meatadata
 
 
@@ -525,7 +524,7 @@ def test(file_list):
     #     "../data/", ["*.gz", ".tar"]
     # ) # 读取文件里列表
 
-    with open(file_list, 'r') as f:
+    with open(file_list, "r") as f:
         arxiv_list = f.readlines()
 
     # entity_ids = [os.path.basename(i) for i in arxiv_list]
@@ -538,46 +537,57 @@ def test(file_list):
     # if count > 10:
     #     break
 
+
 def main():
     parser = argparse.ArgumentParser(description="Docling Convert")
-    parser.add_argument("--input_file", "-i", type=str,default='list.txt', help="Input file")
-    parser.add_argument("--workers_num", "-w", type=int,default=2, help="multi process workers num")
-    parser.add_argument("--output_dir", "-o", type=str,default=r'data/tex_source_parquet', help="Output directory")
+    parser.add_argument(
+        "--input_file", "-i", type=str, default="list.txt", help="Input file"
+    )
+    parser.add_argument(
+        "--workers_num", "-w", type=int, default=2, help="multi process workers num"
+    )
+    parser.add_argument(
+        "--output_dir",
+        "-o",
+        type=str,
+        default=r"data_output/data-image-parquet",
+        help="Output directory",
+    )
     parser.add_argument("--log_dir", "-l", type=str, default="logs", help="Log path")
     args = parser.parse_args()
-    
+
     current_date = datetime.now().strftime("%Y-%m-%d")
-    
+
     input_file = args.input_file
     workers_num = args.workers_num
     # log_dir = Path(args.log_dir)
 
-    
     # global global_log_file, spectial_file_log, output_dir # 失败日志
-
-    global_log_file = os.path.join(args.log_dir , 'log_file.log')
+    os.makedirs(args.log_dir, exist_ok=True)
+    global_log_file = os.path.join(args.log_dir, "log_file.log")
     spectial_file_log = os.path.join(args.log_dir, "spectial_file_log.log")
     output_dir = args.output_dir
-
-
 
     Path(global_log_file).touch()  # 创建全局日志文件
     Path(spectial_file_log).touch()  # 创建特殊矢量图文件日志
     os.makedirs(output_dir, exist_ok=True)
 
-    
     # txt 文件为在数据路径下生成的 list 文件
     # ex: find . -name "*.pdf" > list.txt
-    if input_file.endswith(".txt"): 
+    if input_file.endswith(".txt"):
         input_file_list = Path(input_file).read_text().splitlines()
-        input_file_path_list = [os.path.join(os.path.dirname(input_file), file_path) for file_path in input_file_list]
+        input_file_path_list = [
+            os.path.join(os.path.dirname(input_file), file_path)
+            for file_path in input_file_list
+        ]
         print(input_file_path_list)
         with ProcessPoolExecutor(max_workers=workers_num) as executor:
-            executor.map(process_a_compressed_file, [[file_path, args] for file_path in input_file_path_list])
+            executor.map(
+                process_a_compressed_file,
+                [[file_path, args] for file_path in input_file_path_list],
+            )
     else:
         process_a_compressed_file([input_file, args])
-    
-    
 
 
 if __name__ == "__main__":
