@@ -73,8 +73,6 @@ def htmlTemplate(html_str):
     </html>
     """
 
-
-
 def render_formula_fina(formula, output_filename):
     # Render the formula to HTML
     rendered_result = renderToHtml(formula)
@@ -86,7 +84,6 @@ def render_formula_fina(formula, output_filename):
     # Convert the rendered HTML to an image
     htmlToImage(full_html, output_filename, padding=30)
     print(f"Rendered {formula} to {output_filename}")
-
 
 # Example usage
 if __name__ == "__main__":
@@ -106,6 +103,7 @@ ae+bg & af+bh \\
 ce+dg & cf+dh
 \end{bmatrix}$$
     """
+    formula = """$$\\begin{equation}\n\n\\label{E-2-2b}\n\n\\vec{x}_i \\rightarrow \\vec{x}_i + (\\alpha - 1) \\\n\n\\vec{e}_{\\alpha}\\cdot\\vec{x}_i \\ \\vec{e}_{\\alpha}\n\n\\ .\n\n\\end{equation}$$"""
     rendered_result = renderToHtml(formula)
     html_str = rendered_result["html"]
     print(html_str)

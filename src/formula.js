@@ -1,5 +1,5 @@
 var katexmd = require('markdown-it')();
-katexmd.use(require('markdown-it-katex').default);
+katexmd.use(require('@vscode/markdown-it-katex').default);
 
 function blockKatexRender(text) {
     const result = katexmd.render(text);

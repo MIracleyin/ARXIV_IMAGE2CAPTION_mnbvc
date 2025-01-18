@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+
 import gzip
 import shutil
 import tarfile
@@ -21,6 +25,7 @@ from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Manager
 from ctypes import c_char_p
 from render import render_formula_fina
+import traceback
 
 # global_log_file = "./logs/log_file.log"  # 失败日志
 # global_log_file_v = None  # 失败日志
@@ -306,27 +311,29 @@ def process_a_compressed_file(paramters):
         for each_table_tex in table_tex:
             # 组装包含说明文字的元数据
             image_path = f"{output_dir}/" + str(entity_id)+"_" + str(total_table_counts) + ".png"
+            save_jsonl({'table/equation': each_table_tex}, './total_json.jsonl')
             try:
                 render_formula_fina(
                     "$$" + each_table_tex + "$$", 
                     image_path
                 )
             except Exception as e:
+                print(traceback.format_exc())
                 save_jsonl(
-                {
-                    "reason": "render image failed",
-                    "image_path": image_path,
-                    "table_tex": each_table_tex
-                    "exception": str(e),
-                },
-                global_log_file,
-            )
+                    {
+                        "reason": "render image failed",
+                        "image_path": image_path,
+                        "table_tex": each_table_tex,
+                        "exception": str(e),
+                    },
+                    global_log_file,
+                )
 
             if os.path.exists(image_path):
                 mete_data = metadata_assemble(
                     entity_id=entity_id,
                     block_id=total_table_counts,
-                    image_path=image_path
+                    image_path=image_path,
                     image_data_meta={
                         "file_type": "table/equation",
                         "tex_code":each_table_tex
@@ -377,7 +384,7 @@ def main():
         "--input_file", "-i", type=str, default="list.txt", help="Input file"
     )
     parser.add_argument(
-        "--workers_num", "-w", type=int, default=2, help="multi process workers num"
+        "--workers_num", "-w", type=int, default=1, help="multi process workers num"
     )
     parser.add_argument(
         "--output_dir",
