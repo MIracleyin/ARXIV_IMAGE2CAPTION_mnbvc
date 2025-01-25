@@ -91,24 +91,35 @@ def main():
             for file_path in input_file_list
         ]
         print(input_file_path_list)
-        with ProcessPoolExecutor(max_workers=workers_num) as executor:
-            process_file = []
-            for start in range(0, len(input_file_path_list), args.num_of_file):
-                save_path = os.path.join(
-                    output_dir, f"{start}_{start + args.num_of_file}.parquet"
-                )
-                process_file.append(
-                    [
-                        input_file_path_list[start : start + args.num_of_file],
-                        global_log_file,
-                        save_path,
-                    ]
-                )
+        # with ProcessPoolExecutor(max_workers=workers_num) as executor:
+        #     process_file = []
+        #     for start in range(0, len(input_file_path_list), args.num_of_file):
+        #         save_path = os.path.join(
+        #             output_dir, f"{start}_{start + args.num_of_file}.parquet"
+        #         )
+        #         process_file.append(
+        #             [
+        #                 input_file_path_list[start : start + args.num_of_file],
+        #                 global_log_file,
+        #                 save_path,
+        #             ]
+        #         )
 
-            executor.map(
-                concat_data,
-                process_file,
+        #     executor.map(
+        #         concat_data,
+        #         process_file,
+        #     )
+
+        # with ProcessPoolExecutor(max_workers=workers_num) as executor:
+        for start in range(0, len(input_file_path_list), args.num_of_file):
+            save_path = os.path.join(
+                output_dir, f"{start}_{start + args.num_of_file}.parquet"
             )
+            concat_data([
+                    input_file_path_list[start : start + args.num_of_file],
+                    global_log_file,
+                    save_path,
+                ])
     else:
         assert False, "Input file must be a text file"
 
