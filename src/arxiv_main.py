@@ -581,11 +581,15 @@ def main():
             for file_path in input_file_list
         ]
         print(input_file_path_list)
-        with ProcessPoolExecutor(max_workers=workers_num) as executor:
-            executor.map(
-                process_a_compressed_file,
-                [[file_path, args] for file_path in input_file_path_list],
-            )
+        # with ProcessPoolExecutor(max_workers=workers_num) as executor:
+        #     executor.map(
+        #         process_a_compressed_file,
+        #         [[file_path, args] for file_path in input_file_path_list],
+        #     )
+
+        for file_path in input_file_path_list:
+            process_a_compressed_file([file_path, args])
+
     else:
         process_a_compressed_file([input_file, args])
 
