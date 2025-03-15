@@ -1,1 +1,0 @@
-$$\begin{equation}\n\n\\label{E-2-2b}\n\n\\vec{x}_i \\rightarrow \\vec{x}_i + (\\alpha - 1) \\\n\n\\vec{e}_{\\alpha}\\cdot\\vec{x}_i \\ \\vec{e}_{\\alpha}\n\n\\ .\n\n\end{equation}$$

@@ -2,3 +2,5 @@
 .git
 test
 .DS_Store
+temp
+data_output/table_img_example
