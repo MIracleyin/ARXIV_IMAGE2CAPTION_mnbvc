@@ -138,6 +138,6 @@ E = mc^2
     latex_to_image(latex_code, "output.png", dpi=300)
     print("LaTeX content rendered and saved as output.png")
 
-    for idx, each_data in enumerate(load_jsonl('/Users/leiyoubo/Coding/baidu/Codes/MNBVC_ARXIV_IMAGE2CAPTION/total_json.jsonl')):
-        latex_to_image(each_data['table/equation'], f"/Users/leiyoubo/Coding/baidu/Codes/MNBVC_ARXIV_IMAGE2CAPTION/data_output/table_img_example/{idx}_output.png", dpi=300)
+    for idx, each_data in enumerate(load_jsonl('/Users/Coding/baidu/Codes/MNBVC_ARXIV_IMAGE2CAPTION/total_json.jsonl')):
+        latex_to_image(each_data['table/equation'], f"/Users/Coding/baidu/Codes/MNBVC_ARXIV_IMAGE2CAPTION/data_output/table_img_example/{idx}_output.png", dpi=300)
         print("LaTeX content rendered and saved as output.png")
