@@ -1,7 +1,7 @@
 # step1 处理不带后缀的文件
 # 由于通过爬虫爬取下来的文件不带有后缀名，所以需要预处理为带有后缀名的文件，具体做法为检测文件类型，然后将其复制到另一份文件夹，同时将
-# 压缩文件路径写入到image2caption_processed_file.txt 中待处理，可能解压后存在tex文件，这些文件将保存为第二部分
-# tableequation_processed_file.txt, 未处理文件保存在unprocessed_text.txt 中
+# 压缩文件路径写入到image2caption_processed_file.txt 中待处理，存在直接解压后就是.tex文件，这些文件将保存为第二部分
+# tableequation_processed_file.txt,以供提取表格数据，因为只有一个tex文件，就一定不存在图caption pair数据 未处理文件保存在unprocessed_text.txt 中
 mkdir resource_tmp
 
 # --dir下载目录 download_dir
