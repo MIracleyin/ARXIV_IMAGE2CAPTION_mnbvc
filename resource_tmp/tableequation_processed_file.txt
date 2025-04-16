@@ -1,0 +1,4 @@
+./data/1705.00147/source_extentions/1705.00147.tar
+./data/nucl-th_9903064/source_extentions/nucl-th_9903064.tar
+./data/1901.06056/source_extentions/1901.06056.tex
+./data/1101.5164/source_extentions/1101.5164.tar.gz

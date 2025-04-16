@@ -26,22 +26,48 @@ def detect_file_type(file_path):
         return '.tar'
     elif file_type == 'application/zip':
         return '.zip'
+    elif file_type == 'application/pdf':  # 添加PDF类型检测
+        return '.pdf'
+    elif file_type == 'text/plain':
+        return '.txt'
+    elif file_type == 'text/x-tex':
+        return '.tex'
     else:
-        return None
+        return ""
 
 
 def save_with_append(file_path, content):
     with open(file_path, 'a+', encoding='utf-8') as f:
         f.write(content)
 
+def auto_remove_file(file_path):
+    # for file_path in files:
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
-
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dir", type=str, required=True, help="Directory containing files to be renamed.")
-    parser.add_argument("--save_text", type=str, default="./success_text_file_list.txt", help="Save the list of renamed files to a text file.")
-    parser.add_argument("--failed_text", type=str, default="./failed_text_file_list.txt", help="Save the list of failed files to a text file.")
+    parser.add_argument("--image2caption_processed_file", type=str, 
+                        default="./resource_tmp/image2caption_processed_file.txt", 
+                        help="Save the list of renamed files to a text file.")
+    parser.add_argument("--tableequation_processed_file", type=str, 
+                        default="./resource_tmp/tableequation_processed_file.txt", 
+                        help="Save the list of renamed files to a text file.")
+    parser.add_argument("--unprocessed_text", type=str, default="./resource_tmp/unprocessed_text_file_list.txt", 
+                        help="Save the list of unprocessed files to a text file.")
+    parser.add_argument("--failed_text", type=str, default="./resource_tmp/failed_text_file_list.txt", help="Save the list of failed files to a text file.")
+    parser.add_argument("--new_file", action="store_false", help="Create a new file!")
     args = parser.parse_args()
+    os.makedirs(os.path.dirname(args.image2caption_processed_file), exist_ok=True)
+    os.makedirs(os.path.dirname(args.tableequation_processed_file), exist_ok=True)
+    os.makedirs(os.path.dirname(args.unprocessed_text), exist_ok=True)
+    os.makedirs(os.path.dirname(args.failed_text), exist_ok=True)
+    if args.new_file:
+        auto_remove_file(args.image2caption_processed_file)
+        auto_remove_file(args.tableequation_processed_file)
+        auto_remove_file(args.unprocessed_text)
+        auto_remove_file(args.failed_text)
 
     for file_path in glob.glob(os.path.join(args.dir, "**", "source", "*"), recursive=True):
         if os.path.isfile(file_path):
@@ -56,10 +82,13 @@ if __name__ == "__main__":
                     # 重命名文件
                     shutil.copyfile(file_path, new_file_path) # 注意这里是备份了一份源文件，但是如果不需要则可以改为重命名源文件
                     print(f"Copy {file_path} to {new_file_path}")
-                    save_with_append(args.save_text, new_file_path+'\n')
+                    if extension not in [".pdf", ".txt", ".tex"]:
+                        save_with_append(args.image2caption_processed_file, new_file_path+'\n')
 
-                    # shutil.move(file_path, new_file_path) 
-                    # print(f"Move {file_path} to {new_file_path}")
+                    if extension not in [".pdf"]:
+                        save_with_append(args.tableequation_processed_file, new_file_path+'\n')
+                    else:
+                        save_with_append(args.unprocessed_text, new_file_path+'\n')
                 else:
                     print(f"Cannot determine the type of {file_path}")
                     save_jsonl( [{"file_path": file_path, "error": "Unknown file type"}], args.failed_text)
@@ -67,6 +96,16 @@ if __name__ == "__main__":
                 print(f"Failed to process {file_path}: {e}")
                 save_jsonl([{"file_path": file_path, "error": str(e)}], args.failed_text)
 
+def test_one_file():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file_path", type=str, required=True, help="detect one file")
+    args = parser.parse_args()
+    extension = detect_file_type(args.file_path)
+    print(extension)
+
+
+if __name__ == "__main__":
+    main()
 
         # detected_ext = detect_file_type(filename)
         # if detected_ext is not None:

@@ -287,8 +287,8 @@ def process_a_compressed_file(paramters):
     # print(paramters)
     # global global_log_file, spectial_file_log, output_dir
 
-    global_log_file = os.path.join(args.log_dir, "log_file.log")
-    spectial_file_log = os.path.join(args.log_dir, "spectial_file_log.log")
+    global_log_file = os.path.join(args.log_dir, "log_file_image2caption.log")
+    spectial_file_log = os.path.join(args.log_dir, "spectial_file_log_image2caption.log")
     output_dir = args.output_dir
 
     print(global_log_file, "global_log_file")
@@ -540,12 +540,8 @@ def test(file_list):
 
 def main():
     parser = argparse.ArgumentParser(description="Docling Convert")
-    parser.add_argument(
-        "--input_file", "-i", type=str, default="list.txt", help="Input file"
-    )
-    parser.add_argument(
-        "--workers_num", "-w", type=int, default=2, help="multi process workers num"
-    )
+    parser.add_argument("--input_file", "-i", type=str, default="list.txt", help="Input file")
+    parser.add_argument("--workers_num", "-w", type=int, default=2, help="multi process workers num")
     parser.add_argument(
         "--output_dir",
         "-o",
@@ -564,8 +560,8 @@ def main():
 
     # global global_log_file, spectial_file_log, output_dir # 失败日志
     os.makedirs(args.log_dir, exist_ok=True)
-    global_log_file = os.path.join(args.log_dir, "log_file.log")
-    spectial_file_log = os.path.join(args.log_dir, "spectial_file_log.log")
+    global_log_file = os.path.join(args.log_dir, "log_file_image2caption.log")
+    spectial_file_log = os.path.join(args.log_dir, "spectial_file_log_image2caption.log")
     output_dir = args.output_dir
 
     Path(global_log_file).touch()  # 创建全局日志文件
@@ -575,11 +571,7 @@ def main():
     # txt 文件为在数据路径下生成的 list 文件
     # ex: find . -name "*.pdf" > list.txt
     if input_file.endswith(".txt"):
-        input_file_list = Path(input_file).read_text().splitlines()
-        input_file_path_list = [
-            os.path.join(os.path.dirname(input_file), file_path)
-            for file_path in input_file_list
-        ]
+        input_file_path_list = Path(input_file).read_text().splitlines()
         print(input_file_path_list)
         # with ProcessPoolExecutor(max_workers=workers_num) as executor:
         #     executor.map(

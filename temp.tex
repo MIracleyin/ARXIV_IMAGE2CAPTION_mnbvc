@@ -1,0 +1,46 @@
+
+\documentclass[preview]{standalone}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{adjustbox}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{hyperref}
+\begin{document}
+\begin{table}[t] \centering
+    \begin{tabular}{|c|c|c|c|c|c|}
+	\hline\hline
+	$(\theta_{13}; \theta_{14}; \theta_{24}; \theta_{34})$ & $N_e$ & $\nu_e^{CC}$ & $\nu_\mu^{NC}$ & $\tau \to e$ & $\nu_\mu^{CC}$  \\ \hline
+	$(5^\circ; 5^\circ; 5^\circ; 20^\circ)$   &  3.5 & 19.4 & 5.3 & 2.8 & 0.9 \\
+	$(5^\circ; 5^\circ; 5^\circ; 30^\circ)$   &  3.5 & 19.4 & 5.3 & 2.1 & 0.9 \\
+	$(5^\circ; 5^\circ; 10^\circ; 20^\circ)$  &  2.4 & 19.4 & 5.3 & 2.3 & 0.9 \\
+	$(5^\circ; 5^\circ; 10^\circ; 30^\circ)$  &  2.4 & 19.4 & 5.3 & 2.4 & 0.9 \\
+	3 families                        &  3.7 & 19.7 & 5.3 & 4.6 & 0.9 \\
+	\hline
+	$(10^\circ; 5^\circ; 5^\circ; 20^\circ)$  & 10.6 & 19.4 & 5.3 & 2.7 & 0.9 \\
+	$(10^\circ; 5^\circ; 5^\circ; 30^\circ)$  & 10.4 & 19.4 & 5.3 & 2.0 & 0.9 \\
+	$(10^\circ; 5^\circ; 10^\circ; 20^\circ)$ &  8.8 & 19.4 & 5.3 & 2.2 & 0.9 \\
+	$(10^\circ; 5^\circ; 10^\circ; 30^\circ)$ &  8.6 & 19.4 & 5.3 & 2.4 & 0.9 \\
+	3 families                        & 15.1 & 19.7 & 5.3 & 4.8 & 0.9 \\
+	\hline \hline
+    \end{tabular}
+    \caption{\label{tab:rates2}\sl%
+      Event rates and expected background for the $\nu_\mu \to \nu_e$
+      channel in the OPERA detector, for different values of 
+      $\theta_{14}, \theta_{24}$ and $\theta_{34}$ in the (3+1)
+      scheme. The other unknown angle, $\theta_{13}$, has been fixed
+      to: $\theta_{13} = 5^\circ, 10^\circ$. The CP-violating phases
+      are: $\delta_1 = \delta_2 = 0$; $\delta_3 = 90^\circ$.  As a
+      reference, the expected value in the case of standard
+      three-family oscillation(\textit{i.e.}, for $\theta_{i4} = 0$) is shown
+      for maximal CP-violating phase $\delta$.  The rates are computed
+      according to Eq.~\eqref{eq:signale}. Backgrounds have been
+      computed following Ref.~\cite{Komatsu:2002sz}.}
+\end{table}
+\end{document}

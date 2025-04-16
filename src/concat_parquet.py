@@ -5,20 +5,15 @@ from pathlib import Path
 import pandas as pd
 import os
 from daily_tools import load_jsonl, save_jsonl
-
+import glob
+import sys
 
 def concat_data(paramters):
     try:
         file_paths, global_log_file, save_path = paramters
 
-        print(
-            "global_log_file",
-            global_log_file,
-        )
-        print(
-            "save_path",
-            save_path,
-        )
+        print("global_log_file", global_log_file)
+        print("save_path", save_path)
 
         total_parquet = []
         for each_path in file_paths:
@@ -34,9 +29,10 @@ def concat_data(paramters):
                             "e": str(e),
                             "exc_type": str(exc_type),
                             "exc_value": str(exc_value),
-                            "exc_traceback": str(exc_traceback),
+                            "exc_traceback": repr(exc_traceback),
                         },
-                        "file": file_path,
+                        "file": each_path,
+                        "save_path": save_path,
                     },
                     global_log_file,
                 )
@@ -45,38 +41,38 @@ def concat_data(paramters):
         df_all.to_parquet(save_path, index=False)
     except Exception as e:
         print(e)
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        # 保存异常信息到日志文件中
+        save_jsonl(
+            {
+                "reason": {
+                    "e": str(e),
+                    "exc_type": str(exc_type),
+                    "exc_value": str(exc_value),
+                    "exc_traceback": str(exc_traceback),
+                },
+                "save_path": save_path,
+            },
+            global_log_file,
+        )
 
 
 def main():
     parser = argparse.ArgumentParser(description="Docling Convert")
-    parser.add_argument(
-        "--input_file", "-i", type=str, default="list_parquet.txt", help="Input file"
-    )
-    parser.add_argument(
-        "--workers_num", "-w", type=int, default=2, help="multi process workers num"
-    )
-    parser.add_argument(
-        "--output_dir",
-        "-o",
-        type=str,
-        default=r"data_output/data-table-total",
-        help="Output directory",
-    )
+    parser.add_argument("--input_dir", "-i", type=str, required=True, help="Input file")
+    parser.add_argument("--output_dir", "-o", type=str, required=True, help="Output directory")
     parser.add_argument("--log_dir", "-l", type=str, default="logs", help="Log path")
-    parser.add_argument(
-        "--num_of_file", "-n", type=int, default=10000, help="concat num"
-    )
+    parser.add_argument("--num_of_file", "-n", type=int, default=10000, help="concat num")
     args = parser.parse_args()
 
     current_date = datetime.now().strftime("%Y-%m-%d")
 
-    input_file = args.input_file
-    workers_num = args.workers_num
+    input_file = args.input_dir
     # log_dir = Path(args.log_dir)
 
     # global global_log_file, output_dir # 失败日志
     os.makedirs(args.log_dir, exist_ok=True)
-    global_log_file = os.path.join(args.log_dir, "log_file_concat.log")
+    global_log_file = os.path.join(args.log_dir, "log_file_while_concat.log")
     output_dir = args.output_dir
 
     Path(global_log_file).touch()  # 创建全局日志文件
@@ -84,12 +80,8 @@ def main():
 
     # txt 文件为在数据路径下生成的 list 文件
     # ex: find . -name "*.pdf" > list.txt
-    if input_file.endswith(".txt"):
-        input_file_list = Path(input_file).read_text().splitlines()
-        input_file_path_list = [
-            os.path.join(os.path.dirname(input_file), file_path)
-            for file_path in input_file_list
-        ]
+    if os.path.exists(input_file):
+        input_file_path_list = glob.glob(os.path.join(input_file, "**", "*.parquet"), recursive=True)
         print(input_file_path_list)
         # with ProcessPoolExecutor(max_workers=workers_num) as executor:
         #     process_file = []

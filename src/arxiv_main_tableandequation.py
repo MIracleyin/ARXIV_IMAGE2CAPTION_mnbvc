@@ -5,7 +5,6 @@ sys.path.append(os.path.dirname(__file__))
 import gzip
 import shutil
 import tarfile
-import os
 import pandas as pd
 import numpy as np
 import glob
@@ -24,19 +23,12 @@ from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Manager
 from ctypes import c_char_p
-from render import render_formula_fina
 import traceback
 
-# global_log_file = "./logs/log_file.log"  # 失败日志
-# global_log_file_v = None  # 失败日志
+from latex2pdf2image import latex_to_image
 
-# spectial_file_log_v = None  # 特殊矢量图文件日志
-# output_dir_v =None
-# spectial_file_log = "./logs/spectial_file_log.log"  # 特殊矢量图文件日志
-
-
-# Path(global_log_file).touch()  # 创建全局日志文件
-# Path(spectial_file_log).touch()  # 创建特殊矢量图文件日志
+TexFileType = ["*.ltx", "*.tex", "*.TEX", "*.TeX", "*.Tex"]
+TexFileExt = [each[1:] for each in TexFileType]
 
 
 def extract_gz_file(file_path, to_path=None):
@@ -45,6 +37,12 @@ def extract_gz_file(file_path, to_path=None):
     with gzip.open(file_path, "rb") as f_in:
         with open(extract_path, "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
+
+def is_tex_file(file_path):
+    for each_ext in TexFileExt:
+        if file_path.endswith(each_ext):
+            return True
+    return False
 
 
 def extract_tar_file(file_path, to_path=None):
@@ -84,15 +82,8 @@ def extract_compress_file(file_path):
 
 
 def extract_tex_code(tex_path):
-    # with open(file_path, 'rb') as f:
-    #     rawdata = f.read()
-    # result = chardet.detect(rawdata)
-    # charenc = result['encoding']
     total_encodings = []
     try:
-        # detected = chardet.detect(Path(tex_path).read_bytes())
-        # encoding = detected.get("encoding")
-
         with open(tex_path, "rb") as f:
             rawdata = f.read()
         result = chardet.detect(rawdata)
@@ -116,7 +107,8 @@ def extract_tex_code(tex_path):
         except Exception as e:
             print(tex_path)
             print("Warning2: ", e)
-    assert False, "Can't extract tex code from " + str(tex_path)
+    # assert False, "Can't extract tex code from " + str(tex_path)
+    return ""
 
 
 def extract_tableandequation_code(text_code):
@@ -195,7 +187,7 @@ def validate_file_extension(file_path):
         bool: 如果文件扩展名是 '.gz' 或 '.tar'，则返回 True；否则返回 False。
 
     """
-    valid_extensions = [".gz", ".tar"]
+    valid_extensions = [".gz", ".tar" ] + TexFileExt
     for ext in valid_extensions:
         if file_path.endswith(ext):
             return True
@@ -215,62 +207,45 @@ def process_a_compressed_file(paramters):
     print(global_log_file, "global_log_file")
     # 验证文件扩展名是否有效
     entity_id = os.path.basename(file_path)
-    assert validate_file_extension(file_path), "Invalid file extension: " + str(
-        file_path
-    )
-    try:
-        # 解压缩文件
-        extract_compress_file(file_path)
-    except Exception as e:
-        # 捕获解压缩过程中出现的异常
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        # 保存异常信息到日志文件中
-        save_jsonl(
-            {
-                "reason": {
-                    "e": str(e),
-                    "exc_type": str(exc_type),
-                    "exc_value": str(exc_value),
-                    "exc_traceback": str(exc_traceback),
-                },
-                "file": file_path,
-            },
-            global_log_file,
-        )
-        # 返回空列表表示处理失败
-        return []
-
-    # 如果是.gz文件但不是.tar.gz文件
-    if file_path.endswith(".gz") and not file_path.endswith(".tar.gz"):
-        # 提取TeX代码
-        tex_code = extract_tex_code(file_path[:-3])
-        # 判断TeX代码中是否包含\begin{table
-        if r"\begin{table" in tex_code:
-            # 保存信息到特殊文件日志中
+    if file_path.endswith(".gz") or file_path.endswith(".tar"):
+        try:
+            # 解压缩文件
+            extract_compress_file(file_path)
+        except Exception as e:
+            # 捕获解压缩过程中出现的异常
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            # 保存异常信息到日志文件中
             save_jsonl(
                 {
-                    "reason": "vector diagram",
-                    "file": file_path,
-                },
-                spectial_file_log,
-            )
-        else:
-            # 保存信息到全局日志文件中
-            save_jsonl(
-                {
-                    "reason": "no table in tex",
+                    "reason": {
+                        "e": str(e),
+                        "exc_type": str(exc_type),
+                        "exc_value": str(exc_value),
+                        "exc_traceback": str(exc_traceback),
+                    },
                     "file": file_path,
                 },
                 global_log_file,
             )
+            # 返回空列表表示处理失败
+            return []
 
-    # 获取压缩文件的解压目录
-    base_path = obtain_compressed_dir(file_path)
+    # 如果是.gz文件但不是.tar.gz文件
+    if file_path.endswith(".gz") and not file_path.endswith(".tar.gz"):
+        # 提取TeX代码
+        tex_path = [file_path[:-3]]
+    elif file_path.endswith(".gz") or file_path.endswith(".tar"):
+        # 获取压缩文件的解压目录
+        base_path = obtain_compressed_dir(file_path)
 
-    # 在指定目录中查找特定扩展名的文件
-    tex_path = find_multi_extensions(
-        base_path, ["*.ltx", "*.tex", "*.TEX", "*.TeX", "*.Tex"]
-    )
+        # 在指定目录中查找特定扩展名的文件
+        tex_path = find_multi_extensions(
+            base_path, ["*.ltx", "*.tex", "*.TEX", "*.TeX", "*.Tex"]
+        )
+    elif is_tex_file(file_path):
+        tex_path = [file_path]
+    else:
+        return []
 
     # 如果没有找到TeX文件
     if len(tex_path) == 0:
@@ -313,10 +288,7 @@ def process_a_compressed_file(paramters):
             image_path = f"{output_dir}/" + str(entity_id)+"_" + str(total_table_counts) + ".png"
             save_jsonl({'table/equation': each_table_tex}, './total_json.jsonl')
             try:
-                render_formula_fina(
-                    "$$" + each_table_tex + "$$", 
-                    image_path
-                )
+                latex_to_image(each_table_tex.replace('\n\n', '\n'), image_path)
             except Exception as e:
                 print(traceback.format_exc())
                 save_jsonl(
@@ -336,7 +308,8 @@ def process_a_compressed_file(paramters):
                     image_path=image_path,
                     image_data_meta={
                         "file_type": "table/equation",
-                        "tex_code":each_table_tex
+                        "tex_code":each_table_tex,
+                        "image": True
                     },
                 )
                 os.remove(image_path)
@@ -347,7 +320,8 @@ def process_a_compressed_file(paramters):
                     image_data=each_table_tex,
                     image_data_meta={
                         "file_type": "table/equation",
-                        "tex_code":each_table_tex
+                        "tex_code":each_table_tex,
+                        "image": False
                     },
                 )
             # 将元数据添加到总元数据中
@@ -380,12 +354,7 @@ def process_a_compressed_file(paramters):
 
 def main():
     parser = argparse.ArgumentParser(description="Docling Convert")
-    parser.add_argument(
-        "--input_file", "-i", type=str, default="list.txt", help="Input file"
-    )
-    parser.add_argument(
-        "--workers_num", "-w", type=int, default=1, help="multi process workers num"
-    )
+    parser.add_argument("--input_file", "-i", type=str, default="list.txt", help="Input file")
     parser.add_argument(
         "--output_dir",
         "-o",
@@ -399,13 +368,12 @@ def main():
     current_date = datetime.now().strftime("%Y-%m-%d")
 
     input_file = args.input_file
-    workers_num = args.workers_num
     # log_dir = Path(args.log_dir)
 
     # global global_log_file, spectial_file_log, output_dir # 失败日志
     os.makedirs(args.log_dir, exist_ok=True)
-    global_log_file = os.path.join(args.log_dir, "log_file_table.log")
-    spectial_file_log = os.path.join(args.log_dir, "spectial_file_log_table.log")
+    global_log_file = os.path.join(args.log_dir, "log_file_tableequation.log")
+    spectial_file_log = os.path.join(args.log_dir, "spectial_file_log_tableequation.log")
 
     args.global_log_file = global_log_file
     args.spectial_file_log = spectial_file_log
@@ -421,17 +389,9 @@ def main():
     # txt 文件为在数据路径下生成的 list 文件
     # ex: find . -name "*.pdf" > list.txt
     if input_file.endswith(".txt"):
-        input_file_list = Path(input_file).read_text().splitlines()
-        input_file_path_list = [
-            os.path.join(os.path.dirname(input_file), file_path)
-            for file_path in input_file_list
-        ]
+        input_file_path_list = Path(input_file).read_text().splitlines()
+        
         print(input_file_path_list)
-        # with ProcessPoolExecutor(max_workers=workers_num) as executor:
-        #     executor.map(
-        #         process_a_compressed_file,
-        #         [[file_path, args] for file_path in input_file_path_list],
-        #     )
         for file_path in input_file_path_list:
             process_a_compressed_file([file_path, args])
     else:
