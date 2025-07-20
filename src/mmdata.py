@@ -97,7 +97,10 @@ def metadata_assemble(
     if image_path or (image_data and image_data_meta):
         if image_path:
             image = read_file(image_path)
-            meta_dict = {"file_name": os.path.basename(image_path)}
+            meta_dict = {
+                "file_name": os.path.basename(image_path),
+                "text_length": "0",
+            }
             if image_data_meta:
                 meta_dict.update(image_data_meta)
         else:
@@ -105,7 +108,7 @@ def metadata_assemble(
             meta_dict = image_data_meta
     else:
         image = None
-        meta_dict = {"文本长度": len(text)}
+        meta_dict = {"file_name": "null", "text_length": len(text)}
 
     return mmblock(
         entity_id=entity_id,
