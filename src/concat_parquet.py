@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 import os
-from daily_tools import save_jsonl
+# from daily_tools import load_jsonl, save_jsonl
 import glob
 import sys
 import json
@@ -9,6 +9,38 @@ from typing import List, Tuple
 
 import pyarrow.parquet as pq
 
+
+def save_jsonl(content, file_path, new=False, print_log=True):
+    if print_log:
+        # print(f"save to {file_path}")
+        print(content)
+    try:
+        with open(file_path, "a+" if not new else "w") as outfile:
+            # for entry in content:
+            # json.dump(entry, outfile, ensure_ascii=False)
+            outfile.write(json.dumps(content, ensure_ascii=False))  # noqa: F821
+            outfile.write("\n")
+    except Exception as e:
+        print(e)
+        print("Error: error when saving jsonl!!!!")
+
+
+def load_jsonl(data_path):
+    if os.path.exists(data_path):
+        with open(data_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        jsonl_list = []
+        for line in lines:
+            try:
+                jsonl_list.append(json.loads(line))
+            except Exception:
+                print(f"{line} is not a valid json string")
+        # jsonl_list = [json.loads(line) for line in lines]
+    else:
+        print(f"{data_path} not exists!")
+        jsonl_list = []
+    return jsonl_list
 
 def concat_data(paramters):
     try:
@@ -20,13 +52,45 @@ def concat_data(paramters):
         # 使用 Arrow 以行组为单位流式写入，避免一次性加载到内存
         writer = None
         try:
+            # 首先读取第一个文件来获取基础schema
+            first_file = file_paths[0]
+            first_pf = pq.ParquetFile(first_file)
+            base_schema = first_pf.schema_arrow
+            
+            # 创建统一的schema，移除pandas metadata以避免不匹配
+            unified_schema = base_schema.remove_metadata()
+            
+            # 创建writer使用统一的schema
+            writer = pq.ParquetWriter(save_path, unified_schema, compression="snappy")
+            
+            # 处理所有文件
             for each_path in file_paths:
                 try:
                     pf = pq.ParquetFile(each_path)
-                    if writer is None:
-                        writer = pq.ParquetWriter(save_path, pf.schema_arrow, compression="snappy")
                     for rg_idx in range(pf.num_row_groups):
                         table = pf.read_row_group(rg_idx)
+                        # 确保table的schema与writer的schema兼容
+                        if table.schema != unified_schema:
+                            # 如果schema不匹配，尝试转换
+                            try:
+                                # 使用pyarrow的cast功能来确保schema兼容
+                                table = table.cast(unified_schema)
+                            except Exception as cast_error:
+                                # 如果cast失败，记录错误但继续处理
+                                save_jsonl(
+                                    {
+                                        "reason": {
+                                            "e": f"Schema cast failed: {str(cast_error)}",
+                                            "exc_type": "SchemaCastError",
+                                            "exc_value": str(cast_error),
+                                            "exc_traceback": repr(cast_error),
+                                        },
+                                        "file": each_path,
+                                        "save_path": save_path,
+                                    },
+                                    global_log_file,
+                                )
+                                continue
                         writer.write_table(table)
                 except Exception as e:
                     exc_type, exc_value, exc_traceback = sys.exc_info()
