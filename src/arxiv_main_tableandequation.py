@@ -111,34 +111,104 @@ def extract_tex_code(tex_path):
     return ""
 
 
+def clean_table_content(table_content):
+    """
+    清理表格内容，删除caption和label
+    
+    Args:
+        table_content (str): 原始表格内容
+        
+    Returns:
+        str: 清理后的表格内容
+    """
+    # 删除caption（包括可选参数）
+    # 匹配 \caption[可选参数]{标题} 或 \caption{标题}
+    table_content = re.sub(r'\\caption(?:\[[^\]]*\])?\{[^}]*\}', '', table_content)
+    
+    # 删除label
+    # 匹配 \label{标签名}
+    table_content = re.sub(r'\\label\{[^}]*\}', '', table_content)
+    
+    # 清理多余的空行和空格
+    table_content = re.sub(r'\n\s*\n\s*\n', '\n\n', table_content)
+    table_content = table_content.strip()
+    
+    return table_content
+
+
+def clean_equation_content(equation_content):
+    """
+    清理公式内容，删除label
+    
+    Args:
+        equation_content (str): 原始公式内容
+        
+    Returns:
+        str: 清理后的公式内容
+    """
+    # 删除label
+    # 匹配 \label{标签名}
+    equation_content = re.sub(r'\\label\{[^}]*\}', '', equation_content)
+    
+    # 清理多余的空行和空格
+    equation_content = re.sub(r'\n\s*\n\s*\n', '\n\n', equation_content)
+    equation_content = equation_content.strip()
+    
+    return equation_content
+
+
 def extract_tableandequation_code(text_code):
+    """
+    提取表格和公式代码，并删除caption和label部分
+    
+    Args:
+        text_code (str): 包含LaTeX代码的文本
+        
+    Returns:
+        list: 清理后的表格和公式代码列表
+    """
     tables = []
+    
+    # 提取表格内容
     if "\\begin{table" in text_code:
         # print("Matching '\\begin{table' Mode")
         # print(len(re.findall(r'\\begin\{table\*?\}(.*?)\\end\{table\*?\}', text_code, re.DOTALL)))
-        tables.extend(
-            re.findall(
-                r"(\\begin\{table\*?\}.*?\\end\{table\*?\})", text_code, re.DOTALL
-            )
+        table_matches = re.findall(
+            r"(\\begin\{table\*?\}.*?\\end\{table\*?\})", text_code, re.DOTALL
         )
+        
+        for table in table_matches:
+            # 删除caption和label
+            cleaned_table = clean_table_content(table)
+            tables.append(cleaned_table)
+    
+    # 提取equation内容
     if "\\begin{equation" in text_code:
         # print("Matching '\\begin{equation' Mode")
         # print(len(re.findall(r'\\begin\{equation\*?\}.*?\\end\{equation\*?\}', text_code, re.DOTALL)))
-        tables.extend(
-            re.findall(
-                r"(\\begin\{equation\*?\}.*?\\end\{equation\*?\})",
-                text_code,
-                re.DOTALL,
-            )
+        equation_matches = re.findall(
+            r"(\\begin\{equation\*?\}.*?\\end\{equation\*?\})",
+            text_code,
+            re.DOTALL,
         )
+        
+        for equation in equation_matches:
+            # 删除label
+            cleaned_equation = clean_equation_content(equation)
+            tables.append(cleaned_equation)
+    
+    # 提取align内容
     if "\\begin{align" in text_code:
-        tables.extend(
-            re.findall(
-                r"(\\begin\{align\*?\}.*?\\end\{align\*?\})",
-                text_code,
-                re.DOTALL,
-            )
+        align_matches = re.findall(
+            r"(\\begin\{align\*?\}.*?\\end\{align\*?\})",
+            text_code,
+            re.DOTALL,
         )
+        
+        for align in align_matches:
+            # 删除label
+            cleaned_align = clean_equation_content(align)
+            tables.append(cleaned_align)
 
     return tables
 

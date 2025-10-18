@@ -22,9 +22,14 @@ def latex_to_image(latex_code, output_image_path, dpi=300, tmp_res_dir=None):
     # os.makedirs(tmp_res_dir, exist_ok=True)
     """
     将 LaTeX 公式渲染为图片
+    
     :param latex_code: 完整的 LaTeX 公式代码
     :param output_image_path: 输出图片路径（支持 PNG 或 PDF）
     :param dpi: 图片分辨率（仅对 PNG 有效）
+    :param tmp_res_dir: 临时文件目录，如果为None则自动创建
+    
+    :raises TimeoutError: 当LaTeX编译超过2分钟或PDF裁剪超过30秒时抛出
+    :raises ValueError: 当PDF转换为图片失败时抛出
     """
     # 创建临时 LaTeX 文件
     # temp_tex = os.path.join(tmp_res_dir, "temp.tex")
@@ -33,18 +38,57 @@ def latex_to_image(latex_code, output_image_path, dpi=300, tmp_res_dir=None):
         f.write(
             r"""
 \documentclass[preview]{standalone}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-\usepackage{booktabs}
+% Encoding & fonts
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% Math
+\usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools}
+% 仅对被引用的公式编号；未引用的一律不编号
+\mathtoolsset{showonlyrefs}
+\usepackage{bm}
+\usepackage{esint} % extended integrals
+\usepackage{physics} % common physics macros (\qty, \dv, etc.)
+\usepackage{braket}
+\usepackage{xfrac}
+\usepackage{siunitx}
+\usepackage{cancel}
+
+% Tables
 \usepackage{array}
-\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{multicol}
+\usepackage{makecell}
+\usepackage[table]{xcolor}
+\usepackage{colortbl}
+\usepackage{dcolumn}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage{hhline}
+\usepackage{diagbox}
+
+% Graphics & floats
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{wrapfig}
 \usepackage{adjustbox}
 \usepackage{caption}
-\usepackage{float}
-\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{placeins}
+
+% Algorithms
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Misc
+\usepackage{url}
+\usepackage{xspace}
+\usepackage{enumitem}
+\usepackage{hyperref} % keep last
 \begin{document}
 """ + latex_code + r"""
 \end{document}
@@ -53,11 +97,14 @@ def latex_to_image(latex_code, output_image_path, dpi=300, tmp_res_dir=None):
 
     try:
         try:
-        # 使用 pdflatex 编译 LaTeX 文件为 PDF
+            # 使用 pdflatex 编译 LaTeX 文件为 PDF，设置2分钟超时
             subprocess.run(["pdflatex", "-interaction=nonstopmode", temp_tex, f'-output-directory="{tmp_res_dir}"'], 
-            check=True, cwd=tmp_res_dir, timeout=60)
+            check=True, cwd=tmp_res_dir, timeout=120)
+        except subprocess.TimeoutExpired as e:
+            print(f"LaTeX compilation timed out after 2 minutes: {e}")
+            raise TimeoutError("LaTeX compilation exceeded 2 minutes timeout limit")
         except Exception as e:
-            print(f"Error happdened during pdflatex compilation with e: {e}", )
+            print(f"Error happened during pdflatex compilation with e: {e}")
             # 这里抛出异常了不一定代表pdf没有渲染成功，可能只是因为没有正常返回状态码
 
         # 如果输出路径是 PDF，直接重命名
@@ -67,7 +114,14 @@ def latex_to_image(latex_code, output_image_path, dpi=300, tmp_res_dir=None):
 
         corp_pdf_path = pdf_path.replace(".pdf", "-cropped.pdf")
         # cropped_pdf = os.path.join(tmp_res_dir, "temp-cropped.pdf")
-        subprocess.run(["pdfcrop", pdf_path, corp_pdf_path], check=True, cwd=tmp_res_dir)
+        try:
+            subprocess.run(["pdfcrop", pdf_path, corp_pdf_path], check=True, cwd=tmp_res_dir, timeout=30)
+        except subprocess.TimeoutExpired as e:
+            print(f"PDF crop timed out after 30 seconds: {e}")
+            raise TimeoutError("PDF crop exceeded 30 seconds timeout limit")
+        except Exception as e:
+            print(f"Error during PDF crop: {e}")
+            raise
 
         
         if output_image_path.lower().endswith(".pdf"):
